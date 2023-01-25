@@ -13,6 +13,8 @@ import com.letsdata.commoncrawl.model.filerecords.types.WARCRecordTypes;
 import com.letsdata.commoncrawl.model.filerecords.warc.*;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.CompositeIndexRecord;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.IndexRecord;
+import com.resonance.letsdata.data.documents.implementation.ErrorDoc;
+import com.resonance.letsdata.data.documents.implementation.SkipDoc;
 import com.resonance.letsdata.data.documents.interfaces.CompositeDocInterface;
 import com.resonance.letsdata.data.documents.interfaces.DocumentInterface;
 import com.resonance.letsdata.data.documents.interfaces.ErrorDocInterface;
@@ -248,6 +250,11 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
 
             List<ErrorDocInterface> errorRecordsList = null;
 
+            Map<String, Long> startOffsetMap = new HashMap<>();
+            startOffsetMap.putAll(warcReader.getOffset());
+            startOffsetMap.putAll(watReader.getOffset());
+            startOffsetMap.putAll(wetReader.getOffset());
+
             AbstractMap.SimpleEntry<AbstractWARCRecord, ErrorDocInterface> watNextRecord = getNextRecordFromFileReader(AbstractWARCRecord.class, watReader, false);
             requestMetadata = watNextRecord.getKey();
             requestMetadataError = watNextRecord.getValue();
@@ -397,9 +404,11 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
                 s3FileTypeOffsetMap.putAll(watReader.getOffset());
                 s3FileTypeOffsetMap.putAll(wetReader.getOffset());
 
-                LinkedHashMap<SingleDocInterface, List<ErrorDocInterface>> docMap = new LinkedHashMap<>();
-                docMap.put(requestMetadata, errorRecordsList);
-                CompositeDocInterface compositeDoc = new CompositeIndexRecord(requestMetadata.getTargetUri(), docMap);
+                String skipDocId = requestMetadata == null ? requestMetadataError == null ? UUID.randomUUID().toString() : requestMetadataError.getDocumentId() : requestMetadata.getDocumentId();
+                String recordType = WARCRecordTypes.CONVERSION+","+DocumentRecordTypes.WET_CONVERSION_PAYLOAD;
+                SkipDoc skipDoc = new SkipDoc(startOffsetMap, s3FileTypeOffsetMap, "conversion docs are null", skipDocId, recordType, null, null, skipDocId);
+                Map.Entry<SingleDocInterface, List<ErrorDocInterface>> docMap = new AbstractMap.SimpleEntry<>(skipDoc, errorRecordsList);
+                CompositeDocInterface compositeDoc = new CompositeIndexRecord(skipDocId, docMap);
                 return new ParseCompositeDocumentResult(nextRecordType, compositeDoc, lastProcessedRecordTypeMap, s3FileTypeOffsetMap, SingleFileReaderState.PROCESSING, ParseDocumentResultStatus.SKIP);
             }
 
@@ -413,9 +422,11 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
                 s3FileTypeOffsetMap.putAll(watReader.getOffset());
                 s3FileTypeOffsetMap.putAll(wetReader.getOffset());
 
-                LinkedHashMap<SingleDocInterface, List<ErrorDocInterface>> docMap = new LinkedHashMap<>();
-                docMap.put(requestMetadata == null ? CompositeIndexRecord.NULL_DOC : requestMetadata, errorRecordsList);
-                CompositeDocInterface compositeDoc = new CompositeIndexRecord(requestMetadata.getTargetUri(), docMap);
+                String errorDocId = requestMetadata == null ? requestMetadataError == null ? UUID.randomUUID().toString() : requestMetadataError.getDocumentId() : requestMetadata.getDocumentId();
+                String recordType = errorRecordsList.get(0).getRecordType();
+                ErrorDoc errorDoc = new ErrorDoc(startOffsetMap, s3FileTypeOffsetMap, "errors in getting documents", errorDocId, recordType, null,  null, errorDocId);
+                Map.Entry<SingleDocInterface, List<ErrorDocInterface>> docMap = new AbstractMap.SimpleEntry<>(errorDoc, errorRecordsList);
+                CompositeDocInterface compositeDoc = new CompositeIndexRecord(errorDocId, docMap);
                 return new ParseCompositeDocumentResult(nextRecordType, compositeDoc, lastProcessedRecordTypeMap, s3FileTypeOffsetMap, SingleFileReaderState.PROCESSING, ParseDocumentResultStatus.ERROR);
             }
 
@@ -433,9 +444,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
             List<LanguageStats> languageStats =  warcMetadataDoc == null ? null : warcMetadataDoc.getLanguages();
 
             IndexRecord indexRecord = new IndexRecord(requestMetadata.getTargetUri(), responseDoc.getTitle(), responseDoc.getDescription(), headMetaValues == null ? null : headMetaValues.getKeywords(), headMetaValues == null ? null : headMetaValues.getIcon(), headMetaValues == null ? null : headMetaValues.getCanonical(), headMetaValues == null ? null : headMetaValues.getOg_url(), headMetaValues == null ? null : headMetaValues.getOg_site_name(), headMetaValues == null ? null : headMetaValues.getOg_type(), headMetaValues == null ? null : headMetaValues.getOg_image(), headMetaValues == null ? null : headMetaValues.getOg_title(), headMetaValues == null ? null : headMetaValues.getOg_description(), headMetaValues == null ? null : headMetaValues.getContentType(), reliable, textBytes, languageStats, (long)conversion.getContentLength(), ((WetConversionDoc)conversion.getWarcDoc()).getDocText(), charset);
-            LinkedHashMap<SingleDocInterface, List<ErrorDocInterface>> docMap = new LinkedHashMap<>();
-            docMap.put(indexRecord, errorRecordsList);
-            CompositeDocInterface compositeDoc = new CompositeIndexRecord(indexRecord.getDocumentId(), docMap);
+            CompositeDocInterface compositeDoc = new CompositeIndexRecord(indexRecord.getDocumentId(), new AbstractMap.SimpleEntry<>(indexRecord, errorRecordsList));
 
             Map<String, String> lastProcessedRecordTypeMap = getLastExpectedRecordType(fileTypeReaderMap);
             Map<String, String> nextRecordType = getNextExpectedRecordType(lastProcessedRecordTypeMap);

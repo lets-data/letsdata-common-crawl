@@ -176,4 +176,9 @@ public class WARCError implements ErrorDocInterface {
     public String getErrorMessage() {
         return null;
     }
+
+    @Override
+    public boolean isSingleDoc() {
+        return true;
+    }
 }
