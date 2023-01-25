@@ -324,16 +324,7 @@ public class IndexRecord implements SingleDocInterface {
 
     @Override
     public String getPartitionKey() {
-        try {
-            String partitionKey = url.length() > 256 ? AbstractWARCRecord.encodeBase64(AbstractWARCRecord.computeMD5Hash(url)) : url;
-            if (partitionKey.length() > 256) {
-                logger.error("partitionKey is greater than max allowed length - url: {}, partitionKey: {}", url, partitionKey);
-                throw new RuntimeException("partitionKey is greater than max allowed length");
-            }
-            return partitionKey;
-        } catch (Exception ex) {
-            throw new RuntimeException("getPartitionKey threw exception", ex);
-        }
+        return url;
     }
 
     @Override
