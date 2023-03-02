@@ -22,9 +22,7 @@ import java.util.zip.GZIPOutputStream;
 public class IndexRecord implements SingleDocInterface {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(IndexRecord.class);
-
     private final String url;
-
     // <title>Resonance - a music social network - Discover, listen, share and play</title>
     private final String title;
     // <meta name="description"                content="Resonance is an iOS social networking app for music. Share & personalize new music discovery from friends & family. Discover, listen, share & play - Let's Resonate!">
@@ -35,7 +33,6 @@ public class IndexRecord implements SingleDocInterface {
     private final String icon;
     // <link rel="canonical" href="https://letsresonate.net/index.html">
     private final String canonical;
-
     // <meta property="og:url"                 content="https://letsresonate.net/index.html" />
     private final String og_url;
     // <meta property="og:site_name"           content="Lets Resonate"/>
@@ -48,20 +45,27 @@ public class IndexRecord implements SingleDocInterface {
     private final String og_title;
     // <meta property="og:description"         content="Resonance is an iOS social networking app for music. Share & personalize new music discovery from friends & family. Discover, listen, share & play - Let's Resonate!" />
     private final String og_description;
-
     private final ContentType contentType;
-
     private final Boolean reliable;
     private final Long textBytes;
     private final List<LanguageStats> languages;
-
     private final Long docTextContentLength;
     private final String docText;
-
     private final String charset;
+    private final String documentId;
+    private final String recordType;
+    private final String partitionKey;
+    private final boolean isSingleDoc;
+    private final Map<String, Object> documentMetadata;
 
-    @JsonCreator
-    public IndexRecord(@JsonProperty("url") String url, @JsonProperty("title") String title, @JsonProperty("description") String description, @JsonProperty("keywords") String keywords, @JsonProperty("icon") String icon, @JsonProperty("canonical") String canonical, @JsonProperty("og_url") String og_url, @JsonProperty("og_site_name") String og_site_name, @JsonProperty("og_type") String og_type, @JsonProperty("og_image") String og_image, @JsonProperty("og_title") String og_title, @JsonProperty("og_description") String og_description, @JsonProperty("contentType") String contentType, @JsonProperty("reliable") Boolean reliable, @JsonProperty("textBytes") Long textBytes, @JsonProperty("languages") List<LanguageStats> languages, @JsonProperty("docTextContentLength") Long docTextContentLength, @JsonProperty("docText") String docText, @JsonProperty("charset") String charset) {
+
+    public IndexRecord(String url, String title, String description, String keywords, String icon, String canonical, String og_url, String og_site_name, String og_type, String og_image, String og_title, String og_description,
+                       String contentType, Boolean reliable, Long textBytes, List<LanguageStats> languages, Long docTextContentLength, String docText, String charset) {
+        this.documentId = url;
+        this.partitionKey = url;
+        this.recordType = "IndexRecord";
+        this.isSingleDoc = true;
+        this.documentMetadata = new HashMap<>();
         this.url = url;
         this.title = title;
         this.description = description;
@@ -81,6 +85,39 @@ public class IndexRecord implements SingleDocInterface {
         this.docTextContentLength = docTextContentLength;
         this.docText = docText;
         this.charset = charset;
+    }
+
+    @JsonCreator
+    public IndexRecord(@JsonProperty("documentId") String documentId, @JsonProperty("recordType") String recordType, @JsonProperty("partitionKey") String partitionKey, @JsonProperty("singleDoc") Boolean isSingleDoc, @JsonProperty("documentMetadata") Map<String, Object> documentMetadata,
+                       @JsonProperty("url") String url, @JsonProperty("title") String title, @JsonProperty("description") String description, @JsonProperty("keywords") String keywords, @JsonProperty("icon") String icon,
+                       @JsonProperty("canonical") String canonical, @JsonProperty("og_url") String og_url, @JsonProperty("og_site_name") String og_site_name, @JsonProperty("og_type") String og_type,
+                       @JsonProperty("og_image") String og_image, @JsonProperty("og_title") String og_title, @JsonProperty("og_description") String og_description, @JsonProperty("contentType") String contentType,
+                       @JsonProperty("reliable") Boolean reliable, @JsonProperty("textBytes") Long textBytes, @JsonProperty("languages") List<LanguageStats> languages, @JsonProperty("docTextContentLength") Long docTextContentLength,
+                       @JsonProperty("docText") String docText, @JsonProperty("charset") String charset) {
+        this.url = url;
+        this.title = title;
+        this.description = description;
+        this.keywords = keywords;
+        this.icon = icon;
+        this.canonical = canonical;
+        this.og_url = og_url;
+        this.og_site_name = og_site_name;
+        this.og_type = og_type;
+        this.og_image = og_image;
+        this.og_title = og_title;
+        this.og_description = og_description;
+        this.contentType = StringUtils.isBlank(contentType) ? null : ContentType.fromString(contentType);
+        this.reliable = reliable;
+        this.textBytes = textBytes;
+        this.languages = languages;
+        this.docTextContentLength = docTextContentLength;
+        this.docText = docText;
+        this.charset = charset;
+        this.documentId = documentId;
+        this.partitionKey = partitionKey;
+        this.recordType = recordType;
+        this.isSingleDoc = isSingleDoc;
+        this.documentMetadata = documentMetadata;
     }
 
     @Override
@@ -299,17 +336,17 @@ public class IndexRecord implements SingleDocInterface {
 
     @Override
     public String getDocumentId() {
-        return this.getUrl();
+        return documentId;
     }
 
     @Override
     public String getRecordType() {
-        return "IndexRecord";
+        return recordType;
     }
 
     @Override
     public Map<String, Object> getDocumentMetadata() {
-        return new HashMap<>();
+        return documentMetadata;
     }
 
     @JsonIgnore
@@ -324,11 +361,11 @@ public class IndexRecord implements SingleDocInterface {
 
     @Override
     public String getPartitionKey() {
-        return url;
+        return partitionKey;
     }
 
     @Override
     public boolean isSingleDoc() {
-        return false;
+        return isSingleDoc;
     }
 }
