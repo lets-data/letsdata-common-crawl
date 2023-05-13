@@ -146,15 +146,39 @@ The # Let's Data interface implementations and a utility class or two are in thi
   * `Record Start/End Delimiters:` The record start and end file delimiters are returned to the caller in getNextRecordStartPattern / getNextRecordEndPattern functions. The WARCParserUtils.WARCFileRecordTypes enum defines each record's start / end phrases.
   * `parseDocument:` The parseDocument function has the logic to construct the DocumentInterface for the expected record type in the State Machine. The function is given a byte array with start and end offsets into the record start and end byte indexes. It uses the WARCParserUtils.parseWarcHeaderFields function to read the header bytes and parse them into key value pairs, it finds the record type from the header, validates that it is the expected record type in the state machine and then calls the Java POJO (model) class to construct the RECORD and DOCUMENT and then construct the output index record from these.
 * `com.letsdata.commoncrawl.interfaces.implementations.parser.WARCParserUtils`: WARCParserUtils has a few different utilities - an enum for file type start and end phrases, a Header container java object and a parser function that parses the header from the records. One important detail here is the use of the `com.resonance.letsdata.data.util.Matcher` utility. This function is defined in the lets data interface utilities and is used to get the line delimiter and then the key value delimiter to parse each line into key value pairs. This uses an implementation of Boyer Moore algo that is optimized for byte arrays and does preprocessing such as regex pattern compiles etc. Developers would be interested in seeing how this is implemented and evaluating if such implementations would give their code performance benefits. 
-* `com.letsdata.commoncrawl.interfaces.implementations.reader:` This implements the reader interface (MultipleFileStateMachineReader) which is responsible for extracting different individual records from the parsers and combining them into a composite output doc. Here are some high level callouts for the reader implementation:
-  * `Accessing Parser Implementations:` The reader interface (parseDocument) has access to the file reader for each type which it uses to get the record and state machine information from each file.
+* `com.letsdata.commoncrawl.interfaces.implementations.reader.CommonCrawlReader:` This implements the reader interface (MultipleFileStateMachineReader) which is responsible for extracting different individual records from the parsers (multiple files) and combining them into a composite output doc. Here are some high level callouts for the reader implementation:
+  * `Accessing Parser Implementations:` The reader interface (parseDocument) has access to the file reader for each type which it uses to get the next record and state machine information from each file.
   * `Multiple File State Machine:` The reader maintains a state machine across the different file readers. For example, it validates that for a next record, the warc document needs to be request record type, wat document needs to be request metadata and wet document needs to be conversion record type. As it advances each file reader to the next record, it validates the expected record type in the state machine and handles errors as needed.
   * `Creating CompositeDoc:` The reader creates the composite doc from the extracted records and returns these with the result. 
   * `Offset Management:` Since the reader is reading from each file reader, it is responsible for creating an offset record that has the byte offsets into the file for each filetype.
+* `com.letsdata.commoncrawl.interfaces.implementations.reader.CommonCrawlWARCSingleFileStateMachineReader:` This implements the reader interface (SingleFileStateMachineReader) which is responsible for extracting different individual records from a single file state machine parser and combining them into a composite output doc. Here are some high level callouts for the reader implementation:
+  * `Accessing Parser Implementation:` The reader interface (parseDocument) has access to the file reader the single file it is processing. It uses this parser to get the next record and state machine information from the file.
+  * `Multiple File State Machine:` The reader validates the state machine from the parsers. For example, it validates that the records follow the state machine - request -> response - metadata -> request .... 
+  * `Creating CompositeDoc:` The reader creates the composite doc from the extracted records and returns these with the result.
+  * `Offset Management:` It receives the offset from the system file reader (parser) and passes that to #Let's Data in the result. 
 ### The bin directory
 The bin directory is contains the following scripts:
 * `build.sh:` This builds this module using mvn. Assumes that the maven is installed and added in the PATH. The script downloads the letsdata-data-interface jars, adds them to the local maven repo and then builds this module. It generates 3 JAR artifacts - the jar-with-dependencies has the dependent jars packaged into a single assembly. The SNAPSHOT jar  has the jar for this module only. The sources jar has the source code and debug information. We've used the jar-with-dependencies and the sources jar for development and #Let's Data runs. 
-* `generate_commoncrawl_manifest.py:` This is a quick script to generate the #Let's Data manifest file from the common crawl data. The script has instructions on how to run. 
+* `generate_commoncrawl_manifest.py:` This is a quick script to generate the #Let's Data manifest file from the common crawl data for the CommonCrawlReader (MultipleFileStateMachineReader) usecase. The script has instructions on how to run.
+* `generate_commoncrawl_warc_singlefilestatemachine_manifest.py:` This is a quick script to generate the #Let's Data manifest file from the common crawl data for the CommonCrawlWARCSingleFileStateMachineReader (SingleFileStateMachineReader) usecase. The script has instructions on how to run.
+### The config and iam_policy directories
+* The `config` and `iam_policy` directories have example dataset configuration and the access grant iam role policy documents which can be used to run the `CommonCrawlReader` and `CommonCrawlWARCSingleFileStateMachineReader` usecases.
+* Learn about access grants and the required IAM policies at [access grant docs](www.letsdata.io/docs#accessgrants)
+### Running the datasets
+* The following CLI commands can be used to create and view datasets (after replacing placeholders and creating IAM roles)
+```
+# create the dataset
+$ > ./letsdata datasets create --configFile dataset.json --prettyPrint
+
+# view the dataset, monitor its creation 
+$ > ./letsdata datasets view --datasetName <datasetName> --prettyPrint
+
+# list the datset's tasks
+$ > ./letsdata tasks list --datasetName <datasetName> --prettyPrint 
+```
+* The records that are extracted and written to Kinesis stream can be accessed using the IAM role that is created by #Let's Data. See [Granting Customer Access to #Let's Data Resources](www.letsdata.io/docs#accessgrants) section in the docs. There is a sample implementation code and CLI program that can be used to retrieve the records [letsdata-writeconnector-reader](https://github.com/lets-data/letsdata-writeconnector-reader)
+* Details about tasks, execution logs, errors and dataset metrics can be learned at: [www.letsdata.io/docs](www.letsdata.io/docs)
+
 ### The Unit Tests
 TBA
 

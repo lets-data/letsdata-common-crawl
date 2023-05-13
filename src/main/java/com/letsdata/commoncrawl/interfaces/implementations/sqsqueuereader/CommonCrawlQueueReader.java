@@ -3,7 +3,6 @@ package com.letsdata.commoncrawl.interfaces.implementations.sqsqueuereader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.IndexRecord;
-import com.letsdata.commoncrawl.interfaces.implementations.reader.CommonCrawlReader;
 import com.resonance.letsdata.data.documents.implementation.ErrorDoc;
 import com.resonance.letsdata.data.documents.interfaces.DocumentInterface;
 import com.resonance.letsdata.data.readers.interfaces.sqs.QueueMessageReader;

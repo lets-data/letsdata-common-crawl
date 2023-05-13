@@ -1,0 +1,35 @@
+{
+  "datasetName": "<DATASET_NAME_PLACEHOLDER>",
+  "accessGrantRoleArn": "<ACCESS_GRANT_IAM_ROLE_ARN_PLACEHOLDER>",
+  "customerAccountForAccess": "<CUSTOMER_AWS_ACCOUNT_FOR_ACCESS>",
+  "readConnector": {
+    "connectorDestination": "S3",
+    "artifactImplementationLanguage": "Java",
+    "artifactFileS3Link": "s3://<S3_BUCKET_THAT_HOSTS_JAR>/letsdata-common-crawl-1.0-SNAPSHOT-jar-with-dependencies.jar",
+    "artifactFileS3LinkResourceLocation": "Customer",
+    "readerType": "Single File State Machine Reader",
+    "bucketName": "commoncrawl",
+    "bucketResourceLocation": "LetsData",
+    "singleFileStateMachineParserImplementationClassName": "com.letsdata.commoncrawl.interfaces.implementations.parser.WARCFileParser",
+    "singleFileStateMachineReaderImplementationClassName": "com.letsdata.commoncrawl.interfaces.implementations.reader.CommonCrawlWARCSingleFileStateMachineReader"
+  },
+  "writeConnector": {
+    "connectorDestination": "Kinesis",
+    "resourceLocation": "letsdata",
+    "kinesisShardCount": 15
+  },
+  "errorConnector": {
+    "connectorDestination": "S3",
+    "resourceLocation": "letsdata"
+  },
+  "computeEngine": {
+    "computeEngineType": "Lambda",
+    "concurrency": 15
+  },
+  "manifestFile": {
+    "manifestFileS3Uri": "s3://<S3_BUCKET_THAT_HOSTS_MANIFEST_FILE>/commoncrawl_singlefilestatemachinereader_manifest.txt",
+    "readerManifestResourceLocation": "Customer",
+    "manifestType": "S3ReaderS3LinkManifestFile",
+    "readerType": "SINGLEFILESTATEMACHINEREADER"
+  }
+}
