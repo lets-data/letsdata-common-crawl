@@ -2,13 +2,75 @@
 This package has implementation of the different record types for the different common-crawl filetypes. It also has #Let's Data interface implementations that can be used to process the common crawl datasets using the #Let's Data infrastructure.
 
 Common Crawl is an open repository of web crawl data and serves as a fantastic resource for any project that needs to leverage the www web crawl data. Personally, I've found it a great data resource that can be used to build and test big data infrastructures that can be reused across other big data usecases. You can learn more about common crawl at: https://commoncrawl.org/
+## Problem Definition
+We'd like to process the Common Crawl Web Archives files using the #Let's Data compute to reduce the web archives to JSON documents that could be used to create a database index. Each archive has ~ 240K files, ~477 TB S3 data.
 
-## Data Model Design Notes
+## Solution & Architecture
+There are two different types of development efforts needed for such a Big Data use-case:
+1. The Functional Data Model: Understanding the data formats for the big data functional domain and developing how to parse the data and extract output documents.
+2. The Data Pipeline Infrastructure: This is the infrastructure code that is required to orchestrate the data pipeline, reading from the source, writing to the destination, scheduling computation tasks and data jobs, tracking errors and building in fault tolerance and the necessary diagnostics.
+
+In traditional data pipeline development, one would spend a disproportionately large development effort in developing the data pipeline infrastructure. With #Let’s Data, the focus is mostly on developing the functional data model, with only an integration effort to orchestrate and run the data pipeline.
+Let’s look at each of these development efforts in detail.
+### Common Crawl Data Model
+The Common Crawl Dataset has the following characteristics:
+* it has three filetypes the Archive (WARC), Metadata (WAT) and Conversion (WET) files
+* each data record (crawled link) has data that is spread across these three files:
+    * the archive file (WARC) has the http request and response with some high level metadata
+    * the metadata (WAT) file has the metadata about the records in the archive file such as record types and their record offsets etc.
+    * the conversion template (WET) has the converted Html document
+* each of these files follows a record state machine for each data record (crawled link) – for example,
+    * the archive file state machine is REQUEST -> RESPONSE -> METADATA for each crawled link
+    * the metadata file state machine is METADATA (Request) -> METADATA(Response) -> METADATA(Metadata) for each crawled link (remember that this is metadata about the archive file records)
+    * the conversion file state machine is simple – a single CONVERSION record for each crawled link
+
+With this high-level information, we do the following development tasks:
+* `The POJOS:` create Java POJOs that map to each record type – this is the majority of the work, where you define how to create an object from a byte array and validating the integrity of the object.
+* `The Parsers:` define a parser state machine for each of the file using the #Let’s Data interfaces – this is relatively simpler, you encode the record types as a state machine and specify the start and end delimiters for each records
+* `The Reader:` define a reader that constructs an output document from these file parser state machines using the #Let’s Data interface – this is the simplest of the three, encode the record retrieval logic from the parsers and then construct an output record by combining the these.
+
+###	 #Let’s Data Data-Pipeline
+With the above common crawl data model, we can now simply orchestrate the data pipeline by specifying the dataset configuration. We’d be creating a pipeline that reads the common crawl dataset files from AWS S3, writes them to AWS Kinesis and uses AWS Lambda to run the parser and extraction code. We also do some access setup so that #Let’s Data can automatically manage the read and write resources.
+
+Here are the dataset configuration details:
+* Read Connector configuration:
+    * the S3 Bucket to read from
+    * the JAR file that has the #Let’s Data interface implementations
+    * the mapping of #Let’s Data interfaces to file types (archive file type -> archive file parser class name etc.)
+* Write Connector Configuration
+    * the Kinesis stream that we need to write to
+    * the number of shards for the Kinesis stream
+* Error Connector Configuration
+    * the S3 Bucket to write the error records to
+* Compute Engine Configuration
+    * AWS Lambda compute details – these are the function concurrency, timeout, memory and log level
+* Manifest file
+    * the manifest file that defines the list of all the files that should be processed and their mapping – example:
+```
+Archive : file1.archive | Metadata : file1.metadata | Conversion : file1.conversion
+Archive : file2.archive | Metadata : file2.metadata | Conversion : file2.conversion
+…
+```
+* Each line in the manifest file becomes a #Let’s Data task that can be tracked from creation to completion and has its own progress, errors and diagnostics tracing.
+
+We use the #Let’s Data CLI to create this dataset and monitor its execution via the CLI and Console.
+```
+# create the dataset
+$ > ./letsdata datasets create --configFile dataset.json --prettyPrint
+
+# view the dataset, monitor its creation
+$ > ./letsdata datasets view --datasetName <datasetName> --prettyPrint
+
+# list the datset's tasks
+$ > ./letsdata tasks list --datasetName <datasetName> --prettyPrint
+```
+
+## Data Model Implementation Design Notes
 This package defines enums to create a structure for the WARC, WAT and WET ("warc" file) files while parsing them into java objects
 
-We are defining that a warc files has 2 types of records - a WARC record and a DOCUMENT record.
+Here is a definition that we are going to work with:  a warc file record is composed of 2 types of sub-records - a WARC record and a DOCUMENT record (you can think of these as similar to header record and a payload record)
 
-WARC Records are the different types of WARC records / annotations that are present in the warc files.
+WARC Records are the different types of WARC records / header records / annotations that are present in the warc files.
 
 The different types of WARC Records are defined in WARCRecordTypes enum and have been taken from a webarchive-commons implementation.
 (https://github.com/iipc/webarchive-commons/blob/master/src/main/java/org/archive/format/warc/WARCConstants.java#L106)
@@ -40,7 +102,6 @@ We've defined the following types for (DocumentRecordTypes.java) the DOCUMENT re
 * `WAT_METADATA_WARC_METADATA_PAYLOAD:` Document that has the different metadata attributes and values for the 'metadata' WARCRecordType in the WARC file
 ### WET files
 * `WET_CONVERSION_PAYLOAD:` Document that has the converted document (such as plain text from a web page) for each WARC_HTTP_RESPONSE_PAYLOAD in the WARC file
-
 
 <br/>
 With the above definitions, we can define a structure of the warc files as it is parsed into POJOs as follows (this is essentially the state machine):
