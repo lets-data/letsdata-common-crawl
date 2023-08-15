@@ -157,10 +157,10 @@ public class WETFileParser implements SingleFileStateMachineParser {
             }
         } catch (Exception ex) {
             String warcJSON = new String(byteArr, recordStartIndex, recordEndIndex - recordStartIndex, StandardCharsets.UTF_8);
-            Map<String, Long> recordStartOffset = new HashMap<>();
-            recordStartOffset.put(this.getS3FileType(), (long)(offsetBytes + startIndex));
-            Map<String, Long> recordEndOffset = new HashMap<>();
-            recordEndOffset.put(this.getS3FileType(), (long)(offsetBytes + endIndex));
+            Map<String, String> recordStartOffset = new HashMap<>();
+            recordStartOffset.put(this.getS3FileType(), Long.toString((offsetBytes + startIndex)));
+            Map<String, String> recordEndOffset = new HashMap<>();
+            recordEndOffset.put(this.getS3FileType(), Long.toString((offsetBytes + endIndex)));
             WarcErrorDoc errorDoc = new WarcErrorDoc(documentRecordTypes,"exception in reading WET record from JSON: "+warcJSON, new CrawlDataRecordErrorException(ex), recordStartOffset, recordEndOffset);
             WARCError warcError = new WARCError(CommonCrawlFileType.WET, headers.getProtocol(), headers.getVersion(), headers.getRecordType(), headers.getDate(), headers.getRecordId(), headers.getTargetUri(), headers.getContentType(), headers.getContentLength(), errorDoc);
             return new ParseDocumentResult(errorNextRecordType+","+errorNextDocType, warcError, ParseDocumentResultStatus.ERROR);

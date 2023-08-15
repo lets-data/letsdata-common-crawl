@@ -125,7 +125,7 @@ public class CommonCrawlWARCSingleFileStateMachineReader implements SingleFileSt
                 SystemFileReader warcReader = fileReader;
                 ValidationUtils.validateAssertCondition(warcReader != null, "warcReader is null");
 
-                if (warcReader.getOffsetBytes() == 0) {
+                if (warcReader.getOffsetBytes().equals("0")) {
                     try {
                         skipFileHeaders(warcReader);
                     } catch (Exception ex) {
@@ -154,7 +154,7 @@ public class CommonCrawlWARCSingleFileStateMachineReader implements SingleFileSt
                     Map<String, String> s3FileTypeNextRecordTypeMap = new HashMap<>();
                     s3FileTypeNextRecordTypeMap.put(CommonCrawlFileType.WARC.name(), null);
 
-                    Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                    Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                     s3FileTypeOffsetMap.put(CommonCrawlFileType.WARC.name(), warcReader.getOffsetBytes());
 
                     Map<String, String> lastProcessedRecordTypeMap = getLastExpectedRecordType(s3FileType, fileReader);
@@ -209,7 +209,7 @@ public class CommonCrawlWARCSingleFileStateMachineReader implements SingleFileSt
                     Map<String, String> nextRecordTypeMap = new HashMap<>();
                     nextRecordTypeMap.put(s3FileType, nextRecordType);
 
-                    Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                    Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                     s3FileTypeOffsetMap.put(s3FileType, warcReader.getOffsetBytes());
 
                     String errorDocId = request == null ? requestError == null ? UUID.randomUUID().toString() : requestError.getDocumentId() : request.getDocumentId();
@@ -226,7 +226,7 @@ public class CommonCrawlWARCSingleFileStateMachineReader implements SingleFileSt
                 Map<String, String> nextRecordTypeMap = new HashMap<>();
                 nextRecordTypeMap.put(s3FileType, nextRecordType);
 
-                Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                 s3FileTypeOffsetMap.put(s3FileType, warcReader.getOffsetBytes());
 
                 return new ParseCompositeDocumentResult(nextRecordTypeMap, compositeDoc, lastProcessedRecordTypeMap, s3FileTypeOffsetMap, SingleFileReaderState.PROCESSING, ParseDocumentResultStatus.SUCCESS);

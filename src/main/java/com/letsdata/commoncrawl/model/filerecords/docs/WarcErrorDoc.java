@@ -9,10 +9,10 @@ import java.util.Objects;
 public class WarcErrorDoc extends WarcDoc {
     private final String docValue;
     private final CrawlDataRecordErrorException exception;
-    private final Map<String, Long> recordStartOffset;
-    private final Map<String, Long> recordEndOffset;
+    private final Map<String, String> recordStartOffset;
+    private final Map<String, String> recordEndOffset;
 
-    public WarcErrorDoc(DocumentRecordTypes documentRecordTypes, String value, CrawlDataRecordErrorException ex, Map<String, Long> recordStartOffset, Map<String, Long> recordEndOffset) {
+    public WarcErrorDoc(DocumentRecordTypes documentRecordTypes, String value, CrawlDataRecordErrorException ex, Map<String, String> recordStartOffset, Map<String, String> recordEndOffset) {
         super(validateDocumentTypeIsErrorType(documentRecordTypes));
         this.docValue = value;
         this.exception = ex;
@@ -35,11 +35,11 @@ public class WarcErrorDoc extends WarcDoc {
         return exception;
     }
 
-    public Map<String, Long> getRecordStartOffset() {
+    public Map<String, String> getRecordStartOffset() {
         return recordStartOffset;
     }
 
-    public Map<String, Long> getRecordEndOffset() {
+    public Map<String, String> getRecordEndOffset() {
         return recordEndOffset;
     }
 

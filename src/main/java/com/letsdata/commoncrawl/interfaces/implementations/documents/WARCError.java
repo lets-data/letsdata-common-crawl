@@ -163,12 +163,12 @@ public class WARCError implements ErrorDocInterface {
     }
 
     @Override
-    public Map<String, Long> getErrorStartOffsetMap() {
+    public Map<String, String> getErrorStartOffsetMap() {
         return getWarcDoc().getRecordStartOffset();
     }
 
     @Override
-    public Map<String, Long> getErrorEndOffsetMap() {
+    public Map<String, String> getErrorEndOffsetMap() {
         return getWarcDoc().getRecordEndOffset();
     }
 

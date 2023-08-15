@@ -190,10 +190,10 @@ public class WARCFileParser implements SingleFileStateMachineParser {
                         warcResponse = new WARCResponse(CommonCrawlFileType.WARC, headers.getProtocol(), headers.getVersion(), headers.getRecordType(), headers.getContentType(), headers.getDate(), headers.getContentLength(), (WarcHttpResponseDoc) warcHttpResponseDoc, headers.getRecordId(), headers.getInfoId(), headers.getConcurrentTo(), headers.getIpAddress(), headers.getTargetUri(), headers.getPayloadDigest(), headers.getBlockDigest(), headers.getIdentifiedPayloadType(), headers.getTruncated());
                         return new ParseDocumentResult(WARCRecordTypes.METADATA.toString() + "," + DocumentRecordTypes.WARC_METADATA_PAYLOAD.name(), warcResponse, ParseDocumentResultStatus.SUCCESS);
                     } catch (CrawlDataRecordErrorException cde) {
-                        Map<String, Long> offsetBytesStartMap = new HashMap<>();
-                        offsetBytesStartMap.put(s3FileType, offsetBytes + startIndex);
-                        Map<String, Long> offsetBytesEndMap = new HashMap<>();
-                        offsetBytesEndMap.put(s3FileType, offsetBytes + endIndex);
+                        Map<String, String> offsetBytesStartMap = new HashMap<>();
+                        offsetBytesStartMap.put(s3FileType, Long.toString(offsetBytes + startIndex));
+                        Map<String, String> offsetBytesEndMap = new HashMap<>();
+                        offsetBytesEndMap.put(s3FileType, Long.toString(offsetBytes + endIndex));
                         warcHttpResponseDoc = new WarcErrorDoc(DocumentRecordTypes.WARC_ERROR, new String(byteArr, recordStartIndex, recordEndIndex - recordStartIndex, StandardCharsets.UTF_8), cde, offsetBytesStartMap, offsetBytesEndMap);
                         warcResponse = new WARCError(CommonCrawlFileType.WARC, headers.getProtocol(), headers.getVersion(), headers.getRecordType(), headers.getDate(), headers.getRecordId(), headers.getTargetUri(), headers.getContentType(), headers.getContentLength(), (WarcErrorDoc) warcHttpResponseDoc);
                         return new ParseDocumentResult(WARCRecordTypes.METADATA.toString() + "," + DocumentRecordTypes.WARC_METADATA_PAYLOAD.name(), warcResponse, ParseDocumentResultStatus.ERROR);
@@ -222,10 +222,10 @@ public class WARCFileParser implements SingleFileStateMachineParser {
             }
         } catch (Exception ex) {
             String warcJSON = new String(byteArr, recordStartIndex, recordEndIndex - recordStartIndex, StandardCharsets.UTF_8);
-            Map<String, Long> recordStartOffset = new HashMap<>();
-            recordStartOffset.put(this.getS3FileType(), (long)(offsetBytes + startIndex));
-            Map<String, Long> recordEndOffset = new HashMap<>();
-            recordEndOffset.put(this.getS3FileType(), (long)(offsetBytes + endIndex));
+            Map<String, String> recordStartOffset = new HashMap<>();
+            recordStartOffset.put(this.getS3FileType(), Long.toString((offsetBytes + startIndex)));
+            Map<String, String> recordEndOffset = new HashMap<>();
+            recordEndOffset.put(this.getS3FileType(), Long.toString((offsetBytes + endIndex)));
             WarcErrorDoc errorDoc = new WarcErrorDoc(documentRecordTypes,"exception in reading WARC record from JSON: "+warcJSON, new CrawlDataRecordErrorException(ex), recordStartOffset, recordEndOffset);
             WARCError warcError = new WARCError(CommonCrawlFileType.WARC, headers.getProtocol(), headers.getVersion(), headers.getRecordType(), headers.getDate(), headers.getRecordId(), headers.getTargetUri(), headers.getContentType(), headers.getContentLength(), errorDoc);
             return new ParseDocumentResult(errorNextRecordType+","+errorNextDocType, warcError, ParseDocumentResultStatus.ERROR);

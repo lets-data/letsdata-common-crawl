@@ -148,7 +148,6 @@ public class IndexRecord implements SingleDocInterface {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(url, title, description, keywords, icon, canonical, og_url, og_site_name, og_type, og_image, og_title, og_description, contentType, reliable, textBytes, languages, docTextContentLength, docText, charset);
     }
 
@@ -259,71 +258,7 @@ public class IndexRecord implements SingleDocInterface {
         return sb.toString();
     }
 
-    @JsonIgnore
-    public AbstractMap.SimpleEntry<String, ByteBuffer> getPartitionKeyAndDataBytes() throws Exception {
-        String partitionKey = getPartitionKey();
-        byte[] dataArr = objectMapper.writeValueAsString(this).getBytes("utf-8");
-        ByteArrayOutputStream byteArrayOutputStream = null;
-        GZIPOutputStream gzipOutputStream = null;
-        byte[] dataArrCompressed = null;
-
-        try {
-            byteArrayOutputStream = new ByteArrayOutputStream();
-            gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-            gzipOutputStream.write(dataArr, 0, dataArr.length);
-            gzipOutputStream.flush();
-            gzipOutputStream.finish();
-            dataArrCompressed = byteArrayOutputStream.toByteArray();
-        } catch (IOException ex) {
-            logger.error("IOException in compressing the kinesis data record - url: "+url, ex);
-            throw new RuntimeException("IOException in compressing the kinesis data record");
-        } finally {
-            if (byteArrayOutputStream != null) {
-                byteArrayOutputStream.close();
-            }
-
-            if (gzipOutputStream != null) {
-                gzipOutputStream.close();
-            }
-        }
-
-        if (dataArrCompressed == null || dataArrCompressed.length > 1000*1000) {
-            logger.error("kinesis record data is greater than 1 MB - url: {}, size: {}", url, dataArr.length);
-            throw new RuntimeException("kinesis record data is greater than 1 MB");
-        }
-
-        ByteBuffer byteBuffer = ByteBuffer.wrap(dataArrCompressed);
-        return new AbstractMap.SimpleEntry<>(partitionKey, byteBuffer);
-    }
-
-    /*public static IndexRecord getIndexRecordFromKinesisRecord(Record record, byte[] byteArrDecompressed) throws Exception {
-        ByteBuffer dataBuffer = record.getData();
-        IndexRecord indexRecord = null;
-        ByteArrayInputStream byteArrayInputStream = null;
-        GZIPInputStream gzipInputStream = null;
-        try {
-            byteArrayInputStream = new ByteArrayInputStream(dataBuffer.array(), dataBuffer.position(), dataBuffer.limit()-dataBuffer.position());
-            gzipInputStream = new GZIPInputStream(byteArrayInputStream);
-            int bytesRead = 0;
-            int len = 0;
-            while ((bytesRead = gzipInputStream.read(byteArrDecompressed, len, byteArrDecompressed.length-len)) > 0) {
-                len+=bytesRead;
-            }
-            indexRecord = objectMapper.readValue(byteArrDecompressed, 0, len, IndexRecord.class);
-        } finally {
-            if (byteArrayInputStream != null) {
-                byteArrayInputStream.close();
-            }
-
-            if (gzipInputStream != null) {
-                gzipInputStream.close();
-            }
-        }
-
-        ValidationUtils.validateAssertCondition(indexRecord != null, "indexRecord should not be null");
-        return indexRecord;
-    }*/
-
+    // defined for quick testing
     public static void main(String[] args) throws Exception {
         IndexRecord indexRecord = new IndexRecord("http://url", "title", "desscription", "keywords", "icon", "canonical", "ogurl", "ogsitename", "ogtype", "ogimage", "ogtitle", "ogdescription", "text/html", true, 1024L, Arrays.asList(new LanguageStats(Language.ENGLISH, 1.0, 100.0)), 1024L, "docText", "utf-8");
         String json = objectMapper.writeValueAsString(indexRecord);

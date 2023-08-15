@@ -214,8 +214,8 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
             SystemFileReader wetReader = fileTypeReaderMap.get(CommonCrawlFileType.WET.name());
             ValidationUtils.validateAssertCondition(wetReader != null, "wetReader is null");
 
-            if (warcReader.getOffsetBytes() == 0) {
-                ValidationUtils.validateAssertCondition(watReader.getOffsetBytes() == 0 && wetReader.getOffsetBytes() == 0, "wat and wet reader offset bytes should be > 0 when warc reader offset bytes are > 0");
+            if (warcReader.getOffsetBytes().equals("0")) {
+                ValidationUtils.validateAssertCondition(watReader.getOffsetBytes().equals("0") && wetReader.getOffsetBytes().equals("0"), "wat and wet reader offset bytes should be > 0 when warc reader offset bytes are > 0");
                 try {
                     skipFileHeaders(fileTypeReaderMap);
                 } catch (Exception ex) {
@@ -223,7 +223,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
                     throw new RuntimeException("Error in skipping file headers in the file", ex);
                 }
             } else {
-                ValidationUtils.validateAssertCondition(watReader.getOffsetBytes() > 0 && wetReader.getOffsetBytes()  > 0, "wat and wet reader offset bytes should be > 0 when warc reader offset bytes are > 0");
+                ValidationUtils.validateAssertCondition(!watReader.getOffsetBytes().equals("0") && !wetReader.getOffsetBytes().equals("0"), "wat and wet reader offset bytes should be > 0 when warc reader offset bytes are > 0");
             }
 
             AbstractWARCRecord requestMetadata = null;
@@ -250,7 +250,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
 
             List<ErrorDocInterface> errorRecordsList = null;
 
-            Map<String, Long> startOffsetMap = new HashMap<>();
+            Map<String, String> startOffsetMap = new HashMap<>();
             startOffsetMap.put(warcReader.getFileType(), warcReader.getOffsetBytes());
             startOffsetMap.put(watReader.getFileType(), watReader.getOffsetBytes());
             startOffsetMap.put(wetReader.getFileType(), wetReader.getOffsetBytes());
@@ -275,7 +275,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
                     s3FileTypeNextRecordTypeMap.put(CommonCrawlFileType.WAT.name(), null);
                     s3FileTypeNextRecordTypeMap.put(CommonCrawlFileType.WET.name(), null);
 
-                    Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                    Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                     s3FileTypeOffsetMap.put(warcReader.getFileType(), warcReader.getOffsetBytes());
                     s3FileTypeOffsetMap.put(watReader.getFileType(), watReader.getOffsetBytes());
                     s3FileTypeOffsetMap.put(wetReader.getFileType(), wetReader.getOffsetBytes());
@@ -399,7 +399,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
                 logger.warn("document record not found for targetUri {} - skipping record - fileName: {}", requestMetadata.getTargetUri(), warcReader.getFileName());
                 Map<String, String> lastProcessedRecordTypeMap = getLastExpectedRecordType(fileTypeReaderMap);
                 Map<String, String> nextRecordType = getNextExpectedRecordType(lastProcessedRecordTypeMap);
-                Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                 s3FileTypeOffsetMap.put(warcReader.getFileType(), warcReader.getOffsetBytes());
                 s3FileTypeOffsetMap.put(watReader.getFileType(), watReader.getOffsetBytes());
                 s3FileTypeOffsetMap.put(wetReader.getFileType(), wetReader.getOffsetBytes());
@@ -417,7 +417,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
             if (errorRecordsList != null && errorRecordsList.size() > 0) {
                 Map<String, String> lastProcessedRecordTypeMap = getLastExpectedRecordType(fileTypeReaderMap);
                 Map<String, String> nextRecordType = getNextExpectedRecordType(lastProcessedRecordTypeMap);
-                Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+                Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
                 s3FileTypeOffsetMap.put(warcReader.getFileType(), warcReader.getOffsetBytes());
                 s3FileTypeOffsetMap.put(watReader.getFileType(), watReader.getOffsetBytes());
                 s3FileTypeOffsetMap.put(wetReader.getFileType(), wetReader.getOffsetBytes());
@@ -448,7 +448,7 @@ public class CommonCrawlReader implements MultipleFileStateMachineReader {
 
             Map<String, String> lastProcessedRecordTypeMap = getLastExpectedRecordType(fileTypeReaderMap);
             Map<String, String> nextRecordType = getNextExpectedRecordType(lastProcessedRecordTypeMap);
-            Map<String, Long> s3FileTypeOffsetMap = new HashMap<>();
+            Map<String, String> s3FileTypeOffsetMap = new HashMap<>();
             s3FileTypeOffsetMap.put(warcReader.getFileType(), warcReader.getOffsetBytes());
             s3FileTypeOffsetMap.put(watReader.getFileType(), watReader.getOffsetBytes());
             s3FileTypeOffsetMap.put(wetReader.getFileType(), wetReader.getOffsetBytes());
