@@ -1,5 +1,6 @@
 {
   "datasetName": "<DATASET_NAME_PLACEHOLDER>",
+  "region": "<DATASET_REGION_PLACEHOLDER>",
   "accessGrantRoleArn": "<ACCESS_GRANT_IAM_ROLE_ARN_PLACEHOLDER>",
   "customerAccountForAccess": "<CUSTOMER_AWS_ACCOUNT_FOR_ACCESS>",
   "readConnector": {
