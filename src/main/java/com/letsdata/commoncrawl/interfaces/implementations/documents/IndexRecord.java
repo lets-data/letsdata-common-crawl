@@ -2,6 +2,7 @@ package com.letsdata.commoncrawl.interfaces.implementations.documents;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letsdata.commoncrawl.model.ContentType;
@@ -19,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IndexRecord implements SingleDocInterface {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(IndexRecord.class);
@@ -59,8 +61,7 @@ public class IndexRecord implements SingleDocInterface {
     private final Map<String, Object> documentMetadata;
 
 
-    public IndexRecord(String url, String title, String description, String keywords, String icon, String canonical, String og_url, String og_site_name, String og_type, String og_image, String og_title, String og_description,
-                       String contentType, Boolean reliable, Long textBytes, List<LanguageStats> languages, Long docTextContentLength, String docText, String charset) {
+    public IndexRecord(String url, String title, String description, String keywords, String icon, String canonical, String og_url, String og_site_name, String og_type, String og_image, String og_title, String og_description, String contentType, Boolean reliable, Long textBytes, List<LanguageStats> languages, Long docTextContentLength, String docText, String charset) {
         this.documentId = url;
         this.partitionKey = url;
         this.recordType = "IndexRecord";
@@ -116,7 +117,7 @@ public class IndexRecord implements SingleDocInterface {
         this.documentId = documentId;
         this.partitionKey = partitionKey;
         this.recordType = recordType;
-        this.isSingleDoc = isSingleDoc;
+        this.isSingleDoc = isSingleDoc == null ? true : isSingleDoc;
         this.documentMetadata = documentMetadata;
     }
 

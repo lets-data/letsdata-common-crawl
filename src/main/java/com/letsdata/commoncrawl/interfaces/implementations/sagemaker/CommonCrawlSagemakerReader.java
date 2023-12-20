@@ -3,6 +3,7 @@ package com.letsdata.commoncrawl.interfaces.implementations.sagemaker;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.CompositeIndexRecord;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.IndexRecord;
 import com.letsdata.commoncrawl.interfaces.implementations.documents.VectorRecord;
+import com.letsdata.commoncrawl.model.filerecords.warc.AbstractWARCRecord;
 import com.resonance.letsdata.data.documents.interfaces.DocumentInterface;
 import com.resonance.letsdata.data.readers.interfaces.sagemaker.SagemakerVectorsInterface;
 import org.slf4j.Logger;
@@ -74,6 +75,12 @@ public class CommonCrawlSagemakerReader implements SagemakerVectorsInterface {
         Double[] docTextVectors = vectorsMap.get("DocText");
         Double[] docDescriptionVectors = vectorsMap.get("DocDescription");
         String recordType = "VECTOR";
-        return new VectorRecord(indexRecord.getUrl(), indexRecord.getDocumentId(), recordType, indexRecord.getDocumentMetadata(), docTextVectors, docDescriptionVectors);
+        String documentId = indexRecord.getDocumentId();
+
+        // momento vector index key should be less than 256 bytes. 400 threshold to allow for some testing
+        if (documentId.length() > 400) {
+            documentId = AbstractWARCRecord.computeMD5Hash(documentId);
+        }
+        return new VectorRecord(indexRecord.getUrl(), documentId, recordType, indexRecord.getDocumentMetadata(), docTextVectors, docDescriptionVectors);
     }
 }
