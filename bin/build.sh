@@ -10,9 +10,9 @@ export PROJECT_ROOT=`pwd`
 
 mkdir ../letsdata-data-interface-jars
 # download the letsdata-data-interface jar
-curl https://testletsdatawebtemplates.s3.amazonaws.com/downloads/letsdata-data-interface-1.0-SNAPSHOT.jar --output ../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT.jar
+curl https://www.letsdata.io/downloads/letsdata-data-interface-1.0-SNAPSHOT.jar --output ../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT.jar
 # download the letsdata-data-interface sources jar
-curl https://testletsdatawebtemplates.s3.amazonaws.com/downloads/letsdata-data-interface-1.0-SNAPSHOT-sources.jar --output ../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT-sources.jar
+curl https://www.letsdata.io/downloads/letsdata-data-interface-1.0-SNAPSHOT-sources.jar --output ../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT-sources.jar
 
 # install the letsdata-data-interface jar in the maven repo
 mvn -e install:install-file -Dfile=../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT.jar -Dsources=../letsdata-data-interface-jars/letsdata-data-interface-1.0-SNAPSHOT-sources.jar -DgroupId=com.resonance.letsdata -DartifactId=letsdata-data-interface -Dpackaging=jar -Dversion=1.0-SNAPSHOT

@@ -61,8 +61,21 @@
             <artifactId>httpcore</artifactId>
             <version>4.4.13</version>
         </dependency>
-        <!-- AWS SDK -->
 
+        <!-- Spark dependencies -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.13</artifactId>
+            <version>3.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.18</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Jackson dependencies-->
         <dependency>
